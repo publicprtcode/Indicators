@@ -1,0 +1,9 @@
+// longMA  = 200
+// shortMA = 20
+
+sMA = Average[shortMA](Close)
+lMA = Average[longMA](Close)
+
+output = sMA - lMA
+
+RETURN output as "MA Bandwidth"
