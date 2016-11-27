@@ -1,0 +1,147 @@
+// ============================ \
+// AutoFib (Long) alpha 0.1
+// - Any temporal candle resolution
+// 
+// Discovers significant drops and draws fib retracement
+// levels from recent high to recent low 
+// ============================ /
+
+
+// -------------------------- \
+// Configuration params
+// -------------------------- /
+
+// moving average period
+maPeriod = 34 // to eventually become dynamic
+
+// min distance for valid drop. Ignored if RSI is oversold. 
+minDropDistance = 150 // tweak per market. To become dynamic based on ATR?
+
+// -------------------------- \
+// Defaults
+// -------------------------- /
+once fibSet = 0
+once highestHigh = 0
+once lowestLow = 0
+once currentSupport = 99999
+
+
+// -------------------------- \
+// Global Indicators
+// -------------------------- /
+ma20 = Average[maPeriod](Close)
+ma5  = Average[5](Close)
+
+
+// -------------------------- \
+// Fib boundary discovery logic
+// -------------------------- /
+if not fibSet then
+  // Debug [reset params]
+  //fibHigh = 0
+  //fibLow = 0
+  //support = 99999
+
+  // Invalidate highestHigh param if price crosses back above MA while discovering
+  if ma5 crosses over ma20 then
+  highestHigh = 0
+  currentSupport = 99999
+
+  else // otherwise continue with high & low discovery logic
+
+  // Find the highest high
+  if (close > ma20) then
+  highestHigh = MAX(highestHigh, High)
+  endif
+
+  // Find a reasonable support level (very very rough)
+  // This support logic totally needs working on properly
+  // as a seperate indicator
+  // eg: mySupport = CALL getNearestSupport
+  if (ma5 > ma20) and (open < ma5) then
+  currentSupport = MIN(currentSupport, Low)
+  endif
+
+
+  if (ma5 < ma20) and (highestHigh > 0) and (low < currentSupport) then
+  // price is now falling; test for potential bottom comditions
+
+  // check for hammer maybe?
+
+  // Simple RSI oversold method
+  //if rsi[14] < 30 then
+  //fibSet = 1
+  //endif
+
+  // Has RSI has gone below 30 and then come back above 30
+  // This confirms low better than above RSI function
+  rsiPop = CALL "RSI Pop"(close)
+
+  // Or has a down-spike has occured on this timeframe
+  downSpike = (Close<Open and Close-Low > 14) OR (Open<Close and Open-Low > 14)
+
+  fibSet = fibSet or rsiPop
+  fibSet = fibSet or (((highestHigh-Low) > minDropDistance) and downSpike)
+
+  if fibSet then
+  lowestLow = Lowest[3](Low)
+  endif
+
+  // Dirty way of doing the above
+  //if rsiPop = 1 then // oversold long signal
+  //lowestLow = Lowest[3](Low)
+  //fibSet = 1
+  //endif
+
+  //if ((highestHigh-Low) > minDropDistance) and downSpike then
+  //lowestLow = Lowest[3](Low)
+  //fibSet = 1
+  //endif
+  endif
+  endif
+
+
+elsif fibSet then
+  // -------------------------- \
+  // Fib level calculations and 
+  // indicator validity check
+  // -------------------------- /
+
+  // fib setup void upon next golden cross
+  fibVoid = (ma5 > ma20)
+  if fibVoid then
+  fibSet = 0
+  highestHigh = 0
+  lowestLow = 0
+  currentSupport = 99999
+
+  t236 = 0
+  t382 = 0
+  t500 = 0
+  t618 = 0
+  t764 = 0
+  endif
+
+  // re-calculate fib low point if the price went immediately lower
+  if Low < fibLow then
+  lowestLow = Low
+  endif
+
+  // Set current high, low and support levels for return
+  fibHigh = highestHigh
+  fibLow = lowestLow
+  support = currentSupport
+
+  if not fibVoid then
+  // Calculate fib levels
+  highMinusLow = fibHigh-fibLow
+  t236 = fibLow + (highMinusLow/100) * 23.6
+  t382 = fibLow + (highMinusLow/100) * 38.2
+  t500 = fibLow + (highMinusLow/100) * 50
+  t618 = fibLow + (highMinusLow/100) * 61.8
+  t764 = fibLow + (highMinusLow/100) * 76.4
+  endif
+
+endif //if fibSet
+
+return fibHigh as "fibHigh", fibLow as "fibLow", support as "support", t236 as "t236", t382 as "t382", t500 as "t500", t618 as "t618", t764 as "t764"
