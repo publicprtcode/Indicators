@@ -1,0 +1,25 @@
+once overSold  = 0
+once overBought = 0
+result = 0
+
+r = rsi[14]
+
+if r < 30 then
+overSold = 1
+endif
+
+if r > 70 then
+overBought = 1
+endif
+
+if overSold and r >= 30 then
+overSold = 0
+result = 1
+endif
+
+if overBought and r <= 70 then
+overBought = 0
+result = -1
+endif
+
+return result
