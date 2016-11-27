@@ -4,6 +4,9 @@
 // 
 // Discovers significant drops and draws fib retracement
 // levels from recent high to recent low 
+//
+// REQUIRES
+// - RSI-Pop
 // ============================ /
 
 
