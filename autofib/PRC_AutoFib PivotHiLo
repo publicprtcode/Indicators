@@ -57,7 +57,7 @@ if not fibSet then
 if ma5 crosses over maSlow then
 highestHigh = 0
 currentSupport = close*100
-crossBarIndex = barIndex
+//crossBarIndex = barIndex - let's not get lowest low from here
 
 else // otherwise continue with high & low discovery logic
 
@@ -72,6 +72,7 @@ endif
 // eg: mySupport = CALL getNearestSupport
 if (ma5 > maSlow) and (open < ma5) then
 currentSupport = MIN(currentSupport, Low)
+lowLookBack = barIndex // get lowest low from here instead
 endif
 
 
@@ -89,7 +90,7 @@ fibSet = fibSet or rsiPop
 fibSet = fibSet or (((highestHigh-Low) > minDropDistance) and downSpike)
 
 if fibSet then
-lowestLow = Lowest[(barIndex-crossBarIndex)](Low)
+lowestLow = Lowest[(barIndex-lowLookBak)](Low)
 endif
 
 endif
