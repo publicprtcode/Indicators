@@ -82,7 +82,7 @@ if not fibSet then
   rsiPop = CALL "RSI Pop"(close)
 
   // Or has a down-spike has occured on this timeframe
-  downSpike = (Close<Open and Close-Low > 14) OR (Open<Close and Open-Low > 14)
+  downSpike = (Close<Open and Close-Low > 14*pipsize) OR (Open<Close and Open-Low > 14*pipsize)
 
   fibSet = fibSet or rsiPop
   fibSet = fibSet or (((highestHigh-Low) > minDropDistance) and downSpike)
