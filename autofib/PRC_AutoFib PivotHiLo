@@ -1,0 +1,142 @@
+//AutoFib indicator made of Pivot points Hi/Lo
+//http://www.prorealcode.com/topic/fibonacci-retrace-backtest-for-prt-collaboration-project/
+//www.prorealcode.com
+//Sharing ProRealTime knowledge
+
+// -------------------------- \
+// Configuration params
+// -------------------------- /
+// pivot points min candlesticks
+p = 6
+
+// moving average period
+maPeriod = 34 // to eventually become dynamic
+
+// min distance for valid drop. Ignored if RSI is oversold.
+minDropDistance = 150 // tweak per market. To become dynamic based on ATR?
+
+// -------------------------- \
+// Defaults
+// -------------------------- /
+once fibSet = 0
+once highestHigh = 0
+once lowestLow = 0
+once currentSupport = 99999
+
+// -------------------------- \
+// Global Indicators
+// -------------------------- /
+ma5 = Average[5](Close)
+maSlow = Average[maPeriod](Close)
+
+period = round(p/2)+1
+hh = high[period]
+countH = 0
+for i = 1 to period-1 do
+if high[i]<hh then
+countH=countH+1
+endif
+
+next
+for i = period+1 to p+1 do
+if high[i]<hh then
+countH=countH+1
+endif
+next
+
+if countH=p then
+pivotH = high[period]
+endif
+
+// -------------------------- \
+// Fib boundary discovery logic
+// -------------------------- /
+if not fibSet then
+
+// Invalidate highestHigh param if price crosses back above MA while discovering
+if ma5 crosses over maSlow then
+highestHigh = 0
+currentSupport = close*100
+crossBarIndex = barIndex
+
+else // otherwise continue with high & low discovery logic
+
+// Find the highest high
+if (close > maSlow and close<pivotH) then
+highestHigh = pivotH//MAX(highestHigh, High)
+endif
+
+// Find a reasonable support level (very very rough)
+// This support logic totally needs working on properly
+// as a seperate indicator
+// eg: mySupport = CALL getNearestSupport
+if (ma5 > maSlow) and (open < ma5) then
+currentSupport = MIN(currentSupport, Low)
+endif
+
+
+if (ma5 < maSlow) and (highestHigh > 0) and (low < currentSupport) then
+// price is now falling; test for potential bottom comditions
+
+// Has RSI has gone below 30 and then come back above 30
+// This confirms low better than above RSI function
+rsiPop = CALL "RSI-Pop"(close)
+
+// Or has a down-spike has occured on this timeframe
+downSpike = (Close<Open and Close-Low > 14*pipsize) OR (Open<Close and Open-Low > 14*pipsize)
+
+fibSet = fibSet or rsiPop
+fibSet = fibSet or (((highestHigh-Low) > minDropDistance) and downSpike)
+
+if fibSet then
+lowestLow = Lowest[(barIndex-crossBarIndex)](Low)
+endif
+
+endif
+endif
+
+
+elsif fibSet then
+// -------------------------- \
+// Fib level calculations and
+// indicator validity check
+// -------------------------- /
+
+// fib setup void upon next golden cross
+fibVoid = (ma5 > maSlow)
+if fibVoid then
+fibSet = 0
+highestHigh = 0
+lowestLow = 0
+currentSupport = 99999
+
+t236 = 0
+t382 = 0
+t500 = 0
+t618 = 0
+t764 = 0
+endif
+
+// re-calculate fib low point if the price went immediately lower
+if Low < fibLow then
+lowestLow = Low
+endif
+
+// Set current high, low and support levels for return
+fibHigh = highestHigh
+fibLow = lowestLow
+support = currentSupport
+
+if not fibVoid then
+// Calculate fib levels
+highMinusLow = fibHigh-fibLow
+t236 = fibLow + (highMinusLow/100) * 23.6
+t382 = fibLow + (highMinusLow/100) * 38.2
+t500 = fibLow + (highMinusLow/100) * 50
+t618 = fibLow + (highMinusLow/100) * 61.8
+t764 = fibLow + (highMinusLow/100) * 76.4
+endif
+
+endif //if fibSet
+
+return fibHigh as "fibHigh", fibLow as "fibLow", support as "support", t236 as "t236", t382 as "t382", t500 as "t500", t618 as "t618", t764 as "t764"
