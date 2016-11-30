@@ -1,0 +1,29 @@
+// Swing-Low indicator 0.1
+// Author: Maz @ prorealcode.com
+// 
+// http://www.prorealcode.com/topic/fibonacci-retrace-backtest-for-prt-collaboration-project/
+// --
+
+
+// -------------------------- \
+// Configuration params
+// -------------------------- /
+once swingLowSensitivity = 5
+once maxSwingWidth = 20
+
+// -------------------------- \
+// Indicator Logic
+// -------------------------- /
+swingLow = 0
+if close>open and (high > close[1]) then
+lowestThree = lowest[2](low)
+if lowestThree <= lowest[swingLowSensitivity+1](low) then
+for i = 0 to maxSwingWidth do
+if (open >= Low[i]) and (open <= High[i]) then
+swingLow = lowestThree
+endif
+next
+endif
+endif
+
+return swingLow
