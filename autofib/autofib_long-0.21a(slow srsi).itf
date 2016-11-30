@@ -80,8 +80,13 @@ if (ma5 < maSlow) and (highestHigh > 0) and (low < currentSupport) then
 // Has RSI has gone below 30 and then come back above 30
 // This confirms low better than above RSI function
 //rsiPop = CALL "RSI-Pop"(Close)
-rsiPop = CALL "SRSI-Pop"[6 ,14]
-fibSet = fibSet or rsiPop >= 1
+//rsiPop = CALL "SRSI-Pop"[6 ,14]
+//fibSet = fibSet or rsiPop >= 1
+
+// SRSI Method for finding bottom
+srsi = CALL fnSRSI[6 ,14]
+fibSet = fibSet or (srsi < 20)
+
 
 // Or has a down-spike has occured on this timeframe
 // downspike logic not needed when using swing low indicator to detect lows
