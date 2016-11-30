@@ -1,0 +1,135 @@
+// ============================ \
+// AutoFib (Long) alpha 0.21
+// - Any temporal candle resolution
+// - requires RSI-Pop
+// - required swingLow
+//
+// Discovers significant drops and draws fib retracement
+// levels from recent high to recent low
+// ============================ /
+
+// change log
+// version 0.21
+// - introduction of swingLow0.1a indicator for support and fib low detection
+// - more sensitive overall to find more setups
+// - maSlow renamed to maSlow. 
+
+
+// -------------------------- \
+// Configuration params (play)
+// -------------------------- /
+
+// moving average period
+once maPeriod = 34 // to eventually become dynamic
+
+// min distance for valid drop. Ignored if RSI is oversold.
+once minDropDistance = 150 // tweak per market. To become dynamic based on ATR?
+
+// -------------------------- \
+// Defaults (don't touch)
+// -------------------------- /
+once fibSet = 0
+once highestHigh = 0
+once lowestLow = 0
+once currentSupport = 99999
+
+// -------------------------- \
+// Global Indicators
+// -------------------------- /
+maSlow = Average[maPeriod](Close)
+ma5  = Average[5](Close)
+
+// -------------------------- \
+// Fib boundary discovery logic
+// -------------------------- /
+if not fibSet then
+// Invalidate highestHigh param if price crosses back above MA while discovering
+if ma5 crosses over maSlow then
+highestHigh = 0
+currentSupport = 99999
+
+else // otherwise continue with high & low discovery logic
+
+// Find the highest high
+if (close > maSlow) then
+highestHigh = MAX(highestHigh, High)
+endif
+
+// Find a reasonable support level
+swingLow = CALL swingLow
+if ( (currentSupport >= 99999) and (swingLow > 0) ) OR (swingLow > currentSupport) then
+// current (closest) support becomes the highest swing low before the drop
+currentSupport = swingLow
+lowLookBack    = barIndex
+endif
+
+if (ma5 < maSlow) and (highestHigh > 0) and (low < currentSupport) then
+// price is now falling; test for potential bottom comditions
+
+// Has RSI has gone below 30 and then come back above 30
+// This confirms low better than above RSI function
+rsiPop = CALL "RSI-Pop"(close)
+fibSet = fibSet or rsiPop
+
+// Or has a down-spike has occured on this timeframe
+// downspike logic not needed when using swing low indicator to detect lows
+//downSpike = (Close<Open and Close-Low > 14*pipsize) OR (Open<Close and Open-Low > 14*pipsize)
+//fibSet = fibSet or (rsi[14] > 30 and ((highestHigh-Low) > minDropDistance) and downSpike)
+
+// A swing-low was defined. We therefore have a fib setup
+fibSet = fibSet or ( (swingLow > 0) and (highestHigh-Low) > minDropDistance )
+
+if fibSet then
+//lowestLow = swingLow // could do it this way
+lowestLow = Lowest[(barIndex-lowLookBack)](Low) // this is more thorough
+endif
+
+endif
+endif
+
+
+elsif fibSet then
+// -------------------------- \
+// Fib level calculations and
+// indicator validity check
+// -------------------------- /
+
+// fib setup void upon next golden cross
+fibVoid = (ma5 > maSlow)
+if fibVoid then
+fibSet = 0
+highestHigh = 0
+lowestLow = 0
+currentSupport = 99999
+
+t236 = 0
+t382 = 0
+t500 = 0
+t618 = 0
+t764 = 0
+endif
+
+// re-calculate fib low point if the price went immediately lower
+if Low < fibLow then
+lowestLow = Low
+endif
+
+// Set current high, low and support levels for return
+fibHigh = highestHigh
+fibLow  = lowestLow
+support = currentSupport
+
+if not fibVoid then
+// Calculate fib levels
+highMinusLow = (fibHigh-fibLow)
+
+t236 = fibLow + highMinusLow * 0.236
+t382 = fibLow + highMinusLow * 0.382
+t500 = fibLow + highMinusLow * 0.5
+t618 = fibLow + highMinusLow * 0.618
+t764 = fibLow + highMinusLow * 0.764
+endif
+
+endif //if fibSet
+
+return fibHigh as "fibHigh", fibLow as "fibLow", support as "support", t236 as "t236", t382 as "t382", t500 as "t500", t618 as "t618", t764 as "t764"
