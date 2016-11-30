@@ -1,0 +1,54 @@
+// SRSI-POP
+// Version 0.1a
+//
+// Authors: Maz @ prorealcode.com; Nicolas @ prorealcode.com
+// 
+// http://www.prorealcode.com/topic/fibonacci-retrace-backtest-for-prt-collaboration-project/
+// --
+
+
+// Parameters: ---
+// N = 6
+// Period = 14
+// ---------------
+
+// -- SRSI Logic --
+Price = exponentialaverage[Period](close)
+SF = 1 / N
+delta = Price-Price[1]
+if barindex <= N+Period THEN
+NetChgAvg = (Price - Price[N]) / N
+TotChgAvg = average[N](ABS(Price-Price[1]))
+ELSE
+NetChgAvg = NetChgAvg[1] + SF * (delta-NetChgAvg[1])
+TotChgAvg = TotChgAvg[1] + SF * (ABS(delta)-TotChgAvg[1])
+ENDIF
+if TotChgAvg <> 0 THEN
+ChgRatio = NetChgAvg / TotChgAvg
+ELSE
+ChgRatio = 0
+ENDIF
+
+r = 50 * (ChgRatio + 1)
+
+
+// - RSI-Pop Logic
+once overSold  = 0
+once overBought = 0
+result = 0
+
+if r < 30 then
+overSold = 1
+elsif r > 70 then
+overBought = 1
+endif
+
+if overSold and (r >= 30) then
+overSold = 0
+result = 1
+elsif overBought and (r <= 70) then
+overBought = 0
+result = -1
+endif
+
+return result
