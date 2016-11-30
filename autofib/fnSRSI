@@ -1,0 +1,26 @@
+//parameters :
+// N = 6
+// X = 14
+
+Price = exponentialaverage[X](close)
+SF = 1 / N
+
+Change = Price-Price[1]
+
+if barindex <= N+X THEN
+NetChgAvg = (Price - Price[N]) / N
+TotChgAvg = average[N](ABS(Price-Price[1]))
+ELSE
+NetChgAvg = NetChgAvg[1] + SF * (Change-NetChgAvg[1])
+TotChgAvg = TotChgAvg[1] + SF * (ABS(Change)-TotChgAvg[1])
+ENDIF
+
+if TotChgAvg <> 0 THEN
+ChgRatio = NetChgAvg / TotChgAvg
+ELSE
+ChgRatio = 0
+ENDIF
+
+SRSI = 50 * (ChgRatio + 1)
+
+RETURN SRSI
