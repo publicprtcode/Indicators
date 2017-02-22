@@ -199,7 +199,3 @@ next
 
 
 return BlueSupport coloured (10, 10, 200) as "Blue Support", BlueResistance coloured (10, 10, 255) as "Blue Resistance" , GreenSupport coloured (10, 200, 10) as "Green Support", GreenResistance coloured (10, 255, 10) as "Green Resistance", RedSupport coloured (200, 10, 10) as "Red Support", RedResistance coloured (255, 10, 10) as "Red Resistance"
-
-//return BlueSupport as "Blue Support", BlueResistance as "Blue Resistance", GreenSupport as "Green Support", GreenResistance as "Green Resistance", RedSupport as "Red Support", RedResistance as "Red Resistance"
-
-//return reg as "raffs middle",riffl as "raffs support 1",riffh as "raffs resist 1",raffl as "raffs support 2",raffh as "raffs resist 2"
