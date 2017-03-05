@@ -90,7 +90,7 @@ fibSet = fibSet or rsiPop
 fibSet = fibSet or (((highestHigh-Low) > minDropDistance) and downSpike)
 
 if fibSet then
-lowestLow = Lowest[(barIndex-lowLookBak)](Low)
+lowestLow = Lowest[(barIndex-lowLookBack)](Low)
 endif
 
 endif
